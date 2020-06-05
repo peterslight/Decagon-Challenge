@@ -1,0 +1,7 @@
+<resources>
+    <string name="app_name">Decagon Challenge</string>
+    <string name="filter_by">Filter By</string>
+    <string name="created_at">Created at</string>
+    <string name="highest_comment_count">highest comment count</string>
+    <string name="most_active_authors">Most active authors</string>
+</resources>

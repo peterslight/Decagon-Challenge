@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <item
+        android:id="@+id/popup_active_authors"
+        android:orderInCategory="1"
+        android:title="@string/most_active_authors" />
+    <item
+        android:id="@+id/popup_highest_comment"
+        android:orderInCategory="2"
+        android:title="@string/highest_comment_count" />
+    <item
+        android:id="@+id/popup_created_at"
+        android:orderInCategory="3"
+        android:title="@string/created_at" />
+</menu>
