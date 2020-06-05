@@ -1,7 +1,7 @@
 package com.peterstev.decagonchallenge.models
 
 data class DataModel(
-    val page: String?, val per_page: Number?,
-    val total: Number?, val total_pages: Number?,
+    val page: String?, val per_page: Int?,
+    val total: Int?, val total_pages: Int?,
     val data: List<UserData>?
 )
