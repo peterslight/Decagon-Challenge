@@ -171,6 +171,40 @@ class MainActivity : AppCompatActivity(), MainAdapter.FetchMore {
         } else Toast.makeText(this, "all caught up", Toast.LENGTH_SHORT).show()
     }
 
+    //authors sorted by when their record was created
+    private fun getUsernamesSortedByRecordDate(threshold: Int): List<String> {
+        usersList.sortBy {
+            it.created_at
+        }
+        val sortedList = mutableListOf<String>()
+        usersList.forEachIndexed { index, userData ->
+            if (index.plus(1) > threshold)
+                return@forEachIndexed
+            sortedList.add("${userData.username} (${longToDate(userData.created_at!!)}) ")
+        }
+        return sortedList
+    }
+
+    //most active authors(using submission_count as the criteria)
+    private fun getUsernames(threshold: Int): List<String> {
+        usersList.sortByDescending {
+            it.submission_count
+        }
+        val sortedList = mutableListOf<String>()
+        usersList.forEachIndexed { index, userData ->
+            if (index.plus(1) > threshold)
+                return@forEachIndexed
+            sortedList.add("${userData.username}(${userData.submission_count}) ")
+        }
+        return sortedList
+    }
+
+    private fun getUsernameWithHighestCommentCount(): String {
+        val highestUser = usersList.distinct().maxBy {
+            it.comment_count!!
+        }
+        return "${highestUser!!.username} (${highestUser.comment_count})"
+    }
 
     private fun listFilterResults(result: List<String>) {
         val listAdapter = ArrayAdapter<String>(
@@ -189,43 +223,4 @@ class MainActivity : AppCompatActivity(), MainAdapter.FetchMore {
             }.show()
     }
 
-    companion object {
-        fun getAdapterList(): List<UserData> = MainActivity().adapter.getList()
-        fun getsortedList(): List<UserData> = MainActivity().usersList
-        //most active authors(using submission_count as the criteria)
-        fun getUsernames(threshold: Int): List<String> {
-            MainActivity().usersList.sortByDescending {
-                it.submission_count
-            }
-            val sortedList = mutableListOf<String>()
-            MainActivity().usersList.forEachIndexed { index, userData ->
-                if (index.plus(1) > threshold)
-                    return@forEachIndexed
-                sortedList.add("${userData.username}(${userData.submission_count}) ")
-            }
-            return sortedList
-        }
-
-        //authors sorted by when their record was created
-        fun getUsernamesSortedByRecordDate(threshold: Int): List<String> {
-            MainActivity().usersList.sortBy {
-                it.created_at
-            }
-            val sortedList = mutableListOf<String>()
-            MainActivity().usersList.forEachIndexed { index, userData ->
-                if (index.plus(1) > threshold)
-                    return@forEachIndexed
-                sortedList.add("${userData.username} (${longToDate(userData.created_at!!)}) ")
-            }
-            return sortedList
-        }
-
-        fun getUsernameWithHighestCommentCount(): String {
-            val highestUser = MainActivity().usersList.distinct().maxBy {
-                it.comment_count!!
-            }
-            return "${highestUser!!.username} (${highestUser.comment_count})"
-        }
-
-    }
 }
