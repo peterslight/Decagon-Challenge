@@ -8,5 +8,5 @@ data class UserData(
     val updated_at: String?,
     val submission_count: Number?,
     val comment_count: Number?,
-    val created_at: Number?
+    val created_at: Long?
 )
