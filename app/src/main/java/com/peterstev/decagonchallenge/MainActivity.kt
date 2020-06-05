@@ -2,6 +2,7 @@ package com.peterstev.decagonchallenge
 
 
 import android.os.Bundle
+import android.text.TextUtils
 import android.util.Log
 import android.view.View
 import android.widget.PopupMenu
@@ -36,8 +37,7 @@ class MainActivity : AppCompatActivity(), MainAdapter.FetchMore {
     private lateinit var progress: ProgressBar
     private lateinit var etThreshold: TextInputEditText
 
-    private var currPage: Int = 0
-    private val authorList = mutableListOf<UserData>()
+    private var currPage: Int = 1
     private var totalItems = 0
     private var totalPages = 0
 
@@ -62,14 +62,23 @@ class MainActivity : AppCompatActivity(), MainAdapter.FetchMore {
         }
 
         main_btn_filter.setOnClickListener {
-            //
+            val threshold = etThreshold.text.toString().trim()
+            if (!threshold.isEmpty()) {
+                if (triggerKey == USERNAMES) getUsernames(threshold.toInt()).forEach {
+                    Log.d(
+                        TAG,
+                        "onCreate: $it"
+                    )
+                }
+                else if (triggerKey == CREATED_AT) getUsernamesSortedByRecordDate(threshold.toInt())
+            }
         }
 
         recyclerView.setHasFixedSize(true)
         recyclerView.layoutManager = LinearLayoutManager(this)
-        adapter = MainAdapter(authorList, recyclerView, this)
+        adapter = MainAdapter(emptyList<UserData>().toMutableList(), recyclerView, this)
         recyclerView.adapter = adapter
-        getData(1)
+        getData(currPage)
     }
 
     override fun onBackPressed() {
@@ -123,7 +132,7 @@ class MainActivity : AppCompatActivity(), MainAdapter.FetchMore {
                         if (data?.data != null)
                             adapter.updateList(data.data).apply {
                                 adapter.stopLoading()
-                                currPage = page
+                                currPage++
                                 totalItems = data.total!!
                                 totalPages = data.total_pages!!
                             }
@@ -145,8 +154,45 @@ class MainActivity : AppCompatActivity(), MainAdapter.FetchMore {
     }
 
     override fun load() {
-        if (totalPages > currPage) {
-            getData(currPage.plus(1))
+        if (totalPages >= currPage) {
+            getData(currPage)
+        } else Toast.makeText(this, "all caught up", Toast.LENGTH_SHORT).show()
+    }
+
+    private fun getUsernamesSortedByRecordDate(threshold: Int): List<String>  {
+        val users = adapter.getList()
+        users.sortByDescending {
+            it.created_at
         }
+
+        val sortedList = mutableListOf<String>()
+        users.forEachIndexed { index, userData ->
+            if (index.plus(1) > threshold)
+                return@forEachIndexed
+//            sortedList.add(userData.username!!)
+            sortedList.add("${userData.username}(${userData.submission_count}) ")
+        }
+        return sortedList
+    }
+
+    //most active authors(using submission_count as the criteria)
+    private fun getUsernames(threshold: Int): List<String> {
+        val users = adapter.getList()
+        users.sortByDescending {
+            it.submission_count
+        }
+
+        val sortedList = mutableListOf<String>()
+        users.forEachIndexed { index, userData ->
+            if (index.plus(1) > threshold)
+                return@forEachIndexed
+//            sortedList.add(userData.username!!)
+            sortedList.add("${userData.username}(${userData.submission_count}) ")
+        }
+        return sortedList
+    }
+
+    private fun getUsernameWithHighestCommentCount() {
+
     }
 }

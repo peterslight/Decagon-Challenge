@@ -57,6 +57,7 @@ class MainAdapter(
     }
 
     override fun getItemCount(): Int = list.size
+    fun getList(): MutableList<UserData> = list
 
     override fun onBindViewHolder(holder: MainViewHolder, position: Int) {
         val data = list[position]
