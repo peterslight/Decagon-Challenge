@@ -22,6 +22,7 @@ class MainAdapter(
     private var lastVisibleItemsPosition = -1
     private var itemThreshold = 5
     private var isLoading: Boolean = false
+//    private var originalList = mutableListOf<UserData>()
 
     init {
         val manager = recyclerView.layoutManager as LinearLayoutManager
@@ -66,8 +67,22 @@ class MainAdapter(
 
     fun updateList(newList: List<UserData>) {
         list.addAll(newList)
+//        originalList.clear()
+//        originalList.addAll(list)
         notifyDataSetChanged()
     }
+//
+//    fun setSortedList(newList: List<UserData>) {
+//        list.clear()
+//        list.addAll(newList)
+//        notifyDataSetChanged()
+//    }
+//
+//    fun restoreList() {
+//        list.clear()
+//        list.addAll(originalList)
+//        notifyDataSetChanged()
+//    }
 
     class MainViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         private val username = itemView.findViewById<AppCompatTextView>(R.id.item_username)

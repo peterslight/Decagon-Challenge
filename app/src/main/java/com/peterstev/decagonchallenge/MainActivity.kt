@@ -2,12 +2,13 @@ package com.peterstev.decagonchallenge
 
 
 import android.os.Bundle
-import android.text.TextUtils
 import android.util.Log
 import android.view.View
+import android.widget.ArrayAdapter
 import android.widget.PopupMenu
 import android.widget.ProgressBar
 import android.widget.Toast
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.widget.NestedScrollView
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -20,6 +21,7 @@ import com.peterstev.decagonchallenge.adapters.MainAdapter
 import com.peterstev.decagonchallenge.models.DataModel
 import com.peterstev.decagonchallenge.models.UserData
 import com.peterstev.decagonchallenge.utils.getRetrofit
+import com.peterstev.decagonchallenge.utils.longToDate
 import kotlinx.android.synthetic.main.activity_main.*
 import retrofit2.Call
 import retrofit2.Callback
@@ -40,6 +42,7 @@ class MainActivity : AppCompatActivity(), MainAdapter.FetchMore {
     private var currPage: Int = 1
     private var totalItems = 0
     private var totalPages = 0
+    private var usersList = mutableListOf<UserData>()
 
     private lateinit var sheetBehavior: BottomSheetBehavior<NestedScrollView>
     private lateinit var sheetView: NestedScrollView
@@ -64,13 +67,12 @@ class MainActivity : AppCompatActivity(), MainAdapter.FetchMore {
         main_btn_filter.setOnClickListener {
             val threshold = etThreshold.text.toString().trim()
             if (!threshold.isEmpty()) {
-                if (triggerKey == USERNAMES) getUsernames(threshold.toInt()).forEach {
-                    Log.d(
-                        TAG,
-                        "onCreate: $it"
+                if (triggerKey == USERNAMES) listFilterResults(getUsernames(threshold.toInt()))
+                else if (triggerKey == CREATED_AT) listFilterResults(
+                    getUsernamesSortedByRecordDate(
+                        threshold.toInt()
                     )
-                }
-                else if (triggerKey == CREATED_AT) getUsernamesSortedByRecordDate(threshold.toInt())
+                )
             }
         }
 
@@ -113,6 +115,8 @@ class MainActivity : AppCompatActivity(), MainAdapter.FetchMore {
                     true
                 }
                 R.id.popup_highest_comment -> {
+                    Toast.makeText(this, getUsernameWithHighestCommentCount(), Toast.LENGTH_SHORT)
+                        .show()
                     true
                 }
                 else -> false
@@ -135,6 +139,7 @@ class MainActivity : AppCompatActivity(), MainAdapter.FetchMore {
                                 currPage++
                                 totalItems = data.total!!
                                 totalPages = data.total_pages!!
+                                usersList.addAll(data.data)
                             }
                     }
                 }
@@ -159,40 +164,55 @@ class MainActivity : AppCompatActivity(), MainAdapter.FetchMore {
         } else Toast.makeText(this, "all caught up", Toast.LENGTH_SHORT).show()
     }
 
-    private fun getUsernamesSortedByRecordDate(threshold: Int): List<String>  {
-        val users = adapter.getList()
-        users.sortByDescending {
+    //authors sorted by when their record was created
+    private fun getUsernamesSortedByRecordDate(threshold: Int): List<String> {
+        usersList.sortBy {
             it.created_at
         }
-
         val sortedList = mutableListOf<String>()
-        users.forEachIndexed { index, userData ->
+        usersList.forEachIndexed { index, userData ->
             if (index.plus(1) > threshold)
                 return@forEachIndexed
-//            sortedList.add(userData.username!!)
-            sortedList.add("${userData.username}(${userData.submission_count}) ")
+            sortedList.add("${userData.username} (${longToDate(userData.created_at!!)}) ")
         }
         return sortedList
     }
 
     //most active authors(using submission_count as the criteria)
     private fun getUsernames(threshold: Int): List<String> {
-        val users = adapter.getList()
-        users.sortByDescending {
+        usersList.sortByDescending {
             it.submission_count
         }
-
         val sortedList = mutableListOf<String>()
-        users.forEachIndexed { index, userData ->
+        usersList.forEachIndexed { index, userData ->
             if (index.plus(1) > threshold)
                 return@forEachIndexed
-//            sortedList.add(userData.username!!)
             sortedList.add("${userData.username}(${userData.submission_count}) ")
         }
         return sortedList
     }
 
-    private fun getUsernameWithHighestCommentCount() {
+    private fun getUsernameWithHighestCommentCount(): String {
+        val highestUser = usersList.distinct().maxBy {
+            it.comment_count!!
+        }
+        return "${highestUser!!.username} (${highestUser.comment_count})"
+    }
 
+    private fun listFilterResults(result: List<String>) {
+        val listAdapter = ArrayAdapter<String>(
+            this,
+            android.R.layout.simple_list_item_1,
+            android.R.id.text1,
+            result
+        )
+        AlertDialog.Builder(this)
+            .setTitle("Results")
+            .setAdapter(listAdapter) { dialog, _ ->
+                dialog.dismiss()
+            }
+            .setPositiveButton("Okay") { dialog, _ ->
+                dialog.dismiss()
+            }.show()
     }
 }
