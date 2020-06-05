@@ -1,4 +1,4 @@
-package com.peterstev.decagonchallenge
+package com.peterstev.decagonchallenge.activities
 
 
 import android.os.Bundle
@@ -17,6 +17,7 @@ import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton
 import com.google.android.material.snackbar.Snackbar
 import com.google.android.material.textfield.TextInputEditText
+import com.peterstev.decagonchallenge.R
 import com.peterstev.decagonchallenge.adapters.MainAdapter
 import com.peterstev.decagonchallenge.models.DataModel
 import com.peterstev.decagonchallenge.models.UserData
@@ -66,13 +67,16 @@ class MainActivity : AppCompatActivity(), MainAdapter.FetchMore {
 
         main_btn_filter.setOnClickListener {
             val threshold = etThreshold.text.toString().trim()
-            if (!threshold.isEmpty()) {
+            if (threshold.isNotEmpty()) {
                 if (triggerKey == USERNAMES) listFilterResults(getUsernames(threshold.toInt()))
                 else if (triggerKey == CREATED_AT) listFilterResults(
                     getUsernamesSortedByRecordDate(
                         threshold.toInt()
                     )
                 )
+            } else {
+                Toast.makeText(this, "Enter a threshold value to filter by", Toast.LENGTH_SHORT)
+                    .show()
             }
         }
 
@@ -106,12 +110,14 @@ class MainActivity : AppCompatActivity(), MainAdapter.FetchMore {
             when (it.itemId) {
                 R.id.popup_active_authors -> {
                     toggleBottomSheetState()
-                    triggerKey = USERNAMES
+                    triggerKey =
+                        USERNAMES
                     true
                 }
                 R.id.popup_created_at -> {
                     toggleBottomSheetState()
-                    triggerKey = CREATED_AT
+                    triggerKey =
+                        CREATED_AT
                     true
                 }
                 R.id.popup_highest_comment -> {
@@ -141,6 +147,7 @@ class MainActivity : AppCompatActivity(), MainAdapter.FetchMore {
                                 totalPages = data.total_pages!!
                                 usersList.addAll(data.data)
                             }
+                        if (data!!.data!!.isNotEmpty()) fab.show()
                     }
                 }
 
@@ -164,40 +171,6 @@ class MainActivity : AppCompatActivity(), MainAdapter.FetchMore {
         } else Toast.makeText(this, "all caught up", Toast.LENGTH_SHORT).show()
     }
 
-    //authors sorted by when their record was created
-    private fun getUsernamesSortedByRecordDate(threshold: Int): List<String> {
-        usersList.sortBy {
-            it.created_at
-        }
-        val sortedList = mutableListOf<String>()
-        usersList.forEachIndexed { index, userData ->
-            if (index.plus(1) > threshold)
-                return@forEachIndexed
-            sortedList.add("${userData.username} (${longToDate(userData.created_at!!)}) ")
-        }
-        return sortedList
-    }
-
-    //most active authors(using submission_count as the criteria)
-    private fun getUsernames(threshold: Int): List<String> {
-        usersList.sortByDescending {
-            it.submission_count
-        }
-        val sortedList = mutableListOf<String>()
-        usersList.forEachIndexed { index, userData ->
-            if (index.plus(1) > threshold)
-                return@forEachIndexed
-            sortedList.add("${userData.username}(${userData.submission_count}) ")
-        }
-        return sortedList
-    }
-
-    private fun getUsernameWithHighestCommentCount(): String {
-        val highestUser = usersList.distinct().maxBy {
-            it.comment_count!!
-        }
-        return "${highestUser!!.username} (${highestUser.comment_count})"
-    }
 
     private fun listFilterResults(result: List<String>) {
         val listAdapter = ArrayAdapter<String>(
@@ -214,5 +187,45 @@ class MainActivity : AppCompatActivity(), MainAdapter.FetchMore {
             .setPositiveButton("Okay") { dialog, _ ->
                 dialog.dismiss()
             }.show()
+    }
+
+    companion object {
+        fun getAdapterList(): List<UserData> = MainActivity().adapter.getList()
+        fun getsortedList(): List<UserData> = MainActivity().usersList
+        //most active authors(using submission_count as the criteria)
+        fun getUsernames(threshold: Int): List<String> {
+            MainActivity().usersList.sortByDescending {
+                it.submission_count
+            }
+            val sortedList = mutableListOf<String>()
+            MainActivity().usersList.forEachIndexed { index, userData ->
+                if (index.plus(1) > threshold)
+                    return@forEachIndexed
+                sortedList.add("${userData.username}(${userData.submission_count}) ")
+            }
+            return sortedList
+        }
+
+        //authors sorted by when their record was created
+        fun getUsernamesSortedByRecordDate(threshold: Int): List<String> {
+            MainActivity().usersList.sortBy {
+                it.created_at
+            }
+            val sortedList = mutableListOf<String>()
+            MainActivity().usersList.forEachIndexed { index, userData ->
+                if (index.plus(1) > threshold)
+                    return@forEachIndexed
+                sortedList.add("${userData.username} (${longToDate(userData.created_at!!)}) ")
+            }
+            return sortedList
+        }
+
+        fun getUsernameWithHighestCommentCount(): String {
+            val highestUser = MainActivity().usersList.distinct().maxBy {
+                it.comment_count!!
+            }
+            return "${highestUser!!.username} (${highestUser.comment_count})"
+        }
+
     }
 }
